@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+
+<link href='http://fonts.googleapis.com/css?family=Playfair+Display+SC' rel='stylesheet' type='text/css'>
+
+  <link href='http://fonts.googleapis.com/css?family=Satisfy' rel='stylesheet' type='text/css'>
+
+
+<meta charset="utf-8">
+
+<style>
+
+.counties {
+  fill: #d0d0d0;
+}
+
+.states {
+  fill: none;
+  stroke: #fff;
+  stroke-linejoin: round;
+}
+
+.q0-9 { fill:rgb(247,251,255); }
+.q1-9 { fill:rgb(222,235,247); }
+.q2-9 { fill:rgb(198,219,239); }
+.q3-9 { fill:rgb(158,202,225); }
+.q4-9 { fill:rgb(107,174,214); }
+.q5-9 { fill:rgb(66,146,198); }
+.q6-9 { fill:rgb(33,113,181); }
+.q7-9 { fill:rgb(8,81,156); }
+.q8-9 { fill:rgb(8,48,107); }
+
+h1 {
+    color: gray;
+    font-weight:normal;
+    font-size: 72px;
+    font-family: 'Playfair Display SC', serif;
+    margin-bottom: 60;
+    margin-top: 60;
+    text-align: center;
+
+  }
+
+body {
+    color: gray;
+    font-weight:normal;
+    font-size: 14px;
+    font-family: georgia, serif;
+    
+
+  }
+
+td {
+  padding: 4px 0;
+  font-family: georgia;
+  font-size: 14px;
+  border-bottom:1px solid #dedede;
+}
+ 
+table {
+  border-collapse:collapse;
+} 
+
+
+
+
+
+<span style="color: #000000">"Mississippi"</span>
+
+  #legend {
+    padding: 1.5em 0 0 1.5em;
+}
+
+li.key {
+    border-top-width: 15px;
+    border-top-style: solid;
+    font-size: .75em;
+    width: 10%;
+    padding-left: 0;
+    padding-right: 0;
+}
+
+
+</style>
+
+<header>
+
+  <h1>chicago guns</h1>
+  </header>
+<body>
+
+ <script src="http://d3js.org/d3.v3.min.js"></script>
+<script src="http://d3js.org/queue.v1.min.js"></script>
+<script src="http://d3js.org/topojson.v1.min.js"></script>
+<script>
+
+var width = 960,
+    height = 600;
+
+var rateById = d3.map();
+
+
+
+
+
+ mycolor = d3.scale.threshold()
+    .domain([1, 10, 20, 50, 100, 500, 1000, 3000, 20000])
+    .range(["#ffffd9","#edf8b1", "#c7e9b4", "#7fcdbb", "#41b6c4", "1d91c0", "#225ea8", "#253494", "#081d58"]);
+
+
+
+
+
+
+
+
+var quantize = d3.scale.quantize()
+    .domain([0, 20])
+    .range(d3.range(9).map(function(i) { return "q" + i + "-9"; }));
+
+var projection = d3.geo.albersUsa()
+    .scale(1280)
+    .translate([width / 2, height / 2]);
+
+var path = d3.geo.path()
+    .projection(projection);
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width)
+    .attr("height", height);
+
+queue()
+    .defer(d3.json, "us.json")
+    .defer(d3.tsv, "guns-history3.tsv", function(d) { console.log(d.id); rateById.set(d.id, +d.rate); })
+    .await(ready);
+
+function ready(error, us) {
+  console.log("us", us);
+    console.log("us", us);
+  svg.append("g")
+      .attr("class", "counties")
+    .selectAll("path")
+      .data(topojson.feature(us, us.objects.counties).features)
+    .enter().append("path")
+      .style("fill", function(d) { return mycolor(rateById.get(d.id)) })
+      //.attr("class", function(d) { return quantize(rateById.get(d.id)); })
+      .attr("d", path);
+
+
+svg.selectAll("path")
+ .data(topojson.feature(us, us.objects.counties).features)
+ .append("svg:title")
+ .attr(function(d) { return "path " + d.id; })
+ .attr("transform", function(d) { return "translate(" + path.centroid(d) + ")"; })
+ .attr("dy", ".35em")
+ .text(function(d) { return (rateById.get(d.id)); });
+
+
+
+  svg.append("path")
+      .datum(topojson.mesh(us, us.objects.states, function(a, b) { return a !== b; }))
+      .attr("class", "states")
+      .attr("d", path);
+}
+
+d3.select(self.frameElement).style("height", height + "px");
+
+
+
+
+
+
+
+
+
+var legend = d3.select('#legend')
+  .append('ul')
+    .attr('class', 'list-inline');
+
+var keys = legend.selectAll('li.key')
+    .data(colors.range());
+
+keys.enter().append('li')
+    .attr('class', 'key')
+    .style('border-top-color', String)
+    .text(function(d) {
+        var r = colors.invertExtent(d);
+        return formats.percent(r[0]);
+    });
+
+
+
+
+
+
+
+</script>
+
+
+
+
+
+
+
+<table cellpadding="10" cellspacing="10" align="center" width="400" border="0" bgcolor="#ffffff">
+  <thead>
+    <tr>
+      <th class="State-cell"><span style="color: #081d58;font-size: 18px;font-family: "Satisfy">State</span></th>
+      <th class="# of Guns-cell"><span style="color: #081d58;font-size: 18px"># of Guns</span></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr class="firstRow">
+      <td class="State-cell">Alabama</td>
+      <td class="# of Guns-cell">1070</td>
+    </tr>
+    <tr>
+      <td class="State-cell">Alaska</td>
+      <td class="# of Guns-cell">33</td>
+    </tr>
+    <tr>
+      <td class="State-cell">Arizona</td>
+      <td class="# of Guns-cell">355</td>
+    </tr>
+    <tr>
+      <td class="State-cell">Arkansas</td>
+      <td class="# of Guns-cell">944</td>
+    </tr>
+    <tr>
+      <td class="State-cell">California</td>
+      <td class="# of Guns-cell">526</td>
+    </tr>
+    <tr>
+      <td class="State-cell">Colorado</td>
+      <td class="# of Guns-cell">187</td>
+    </tr>
+    <tr>
+      <td class="State-cell">Connecticut</td>
+      <td class="# of Guns-cell">46</td>
+    </tr>
+    <tr>
+      <td class="State-cell">Delaware</td>
+      <td class="# of Guns-cell">10</td>
+    </tr>
+    <tr>
+      <td class="State-cell">District of Columbia</td>
+      <td class="# of Guns-cell">2</td>
+    </tr>
+    <tr>
+      <td class="State-cell">Florida</td>
+      <td class="# of Guns-cell">673</td>
+    </tr>
+    <tr>
+      <td class="State-cell">Georgia</td>
+      <td class="# of Guns-cell">933</td>
+    </tr>
+    <tr>
+      <td class="State-cell">Hawaii</td>
+      <td class="# of Guns-cell">8</td>
+    </tr>
+    <tr>
+      <td class="State-cell">Idaho</td>
+      <td class="# of Guns-cell">39</td>
+    </tr>
+    <tr>
+      <td class="State-cell">Illinois</td>
+      <td class="# of Guns-cell">22051</td>
+    </tr>
+    <tr>
+      <td class="State-cell">Indiana</td>
+      <td class="# of Guns-cell">7747</td>
+    </tr>
+    <tr>
+      <td class="State-cell">Iowa</td>
+      <td class="# of Guns-cell">397</td>
+    </tr>
+    <tr>
+      <td class="State-cell">Kansas</td>
+      <td class="# of Guns-cell">177</td>
+    </tr>
+    <tr>
+      <td class="State-cell">Kentucky</td>
+      <td class="# of Guns-cell">1226</td>
+    </tr>
+    <tr>
+      <td class="State-cell">Louisiana</td>
+      <td class="# of Guns-cell">529</td>
+    </tr>
+    <tr>
+      <td class="State-cell">Maine</td>
+      <td class="# of Guns-cell">18</td>
+    </tr>
+    <tr>
+      <td class="State-cell">Maryland</td>
+      <td class="# of Guns-cell">50</td>
+    </tr>
+    <tr>
+      <td class="State-cell">Massachusetts</td>
+      <td class="# of Guns-cell">108</td>
+    </tr>
+    <tr>
+      <td class="State-cell">Michigan</td>
+      <td class="# of Guns-cell">679</td>
+    </tr>
+    <tr>
+      <td class="State-cell">Minnesota</td>
+      <td class="# of Guns-cell">474</td>
+    </tr>
+    <tr>
+      <td class="State-cell"><span style="color: #081d58;font-size: 20px">Mississippi</span></td>
+      <td class="# of Guns-cell"><span style="color: #081d58;font-size: 20px">4296</span></td>
+    </tr>
+    <tr>
+      <td class="State-cell">Missouri</td>
+      <td class="# of Guns-cell">344</td>
+    </tr>
+    <tr>
+      <td class="State-cell">Montana</td>
+      <td class="# of Guns-cell">53</td>
+    </tr>
+    <tr>
+      <td class="State-cell">Nebraska</td>
+      <td class="# of Guns-cell">104</td>
+    </tr>
+    <tr>
+      <td class="State-cell">Nevada</td>
+      <td class="# of Guns-cell">103</td>
+    </tr>
+    <tr>
+      <td class="State-cell">New Hampshire</td>
+      <td class="# of Guns-cell">14</td>
+    </tr>
+    <tr>
+      <td class="State-cell">New Jersey</td>
+      <td class="# of Guns-cell">21</td>
+    </tr>
+    <tr>
+      <td class="State-cell">New Mexico</td>
+      <td class="# of Guns-cell">75</td>
+    </tr>
+    <tr>
+      <td class="State-cell">New York</td>
+      <td class="# of Guns-cell">97</td>
+    </tr>
+    <tr>
+      <td class="State-cell">North Carolina</td>
+      <td class="# of Guns-cell">295</td>
+    </tr>
+    <tr>
+      <td class="State-cell">North Dakota</td>
+      <td class="# of Guns-cell">31</td>
+    </tr>
+    <tr>
+      <td class="State-cell">Ohio</td>
+      <td class="# of Guns-cell">1121</td>
+    </tr>
+    <tr>
+      <td class="State-cell">Oklahoma</td>
+      <td class="# of Guns-cell">207</td>
+    </tr>
+    <tr>
+      <td class="State-cell">Oregon</td>
+      <td class="# of Guns-cell">40</td>
+    </tr>
+    <tr>
+      <td class="State-cell">Pennsylvania</td>
+      <td class="# of Guns-cell">181</td>
+    </tr>
+    <tr>
+      <td class="State-cell">Rhode Island</td>
+      <td class="# of Guns-cell">5</td>
+    </tr>
+    <tr>
+      <td class="State-cell">South Carolina</td>
+      <td class="# of Guns-cell">152</td>
+    </tr>
+    <tr>
+      <td class="State-cell">South Dakota</td>
+      <td class="# of Guns-cell">36</td>
+    </tr>
+    <tr>
+      <td class="State-cell">Tennessee</td>
+      <td class="# of Guns-cell">1090</td>
+    </tr>
+    <tr>
+      <td class="State-cell">Texas</td>
+      <td class="# of Guns-cell">937</td>
+    </tr>
+    <tr>
+      <td class="State-cell">Utah</td>
+      <td class="# of Guns-cell">53</td>
+    </tr>
+    <tr>
+      <td class="State-cell">Vermont</td>
+      <td class="# of Guns-cell">4</td>
+    </tr>
+    <tr>
+      <td class="State-cell">Virginia</td>
+      <td class="# of Guns-cell">269</td>
+    </tr>
+    <tr>
+      <td class="State-cell">Washington</td>
+      <td class="# of Guns-cell">156</td>
+    </tr>
+    <tr>
+      <td class="State-cell">West Virginia</td>
+      <td class="# of Guns-cell">202</td>
+    </tr>
+    <tr>
+      <td class="State-cell">Wisconsin</td>
+      <td class="# of Guns-cell">1647</td>
+    </tr>
+    <tr class="lastRow">
+      <td class="State-cell">Wyoming</td>
+      <td class="# of Guns-cell">29</td>
+    </tr>
+  </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
