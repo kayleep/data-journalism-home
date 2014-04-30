@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+path {
+  stroke-linejoin: round;
+}
+
+.land {
+  fill: #ddd;
+}
+
+.states {
+  fill: none;
+  stroke: #fff;
+}
+
+</style>
+<body>
+
+
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script src="http://d3js.org/queue.v1.min.js"></script>
+<script src="http://d3js.org/topojson.v1.min.js"></script>
+<script>
+
+var width = 960,
+    height = 500;
+
+var projection = d3.geo.albers();
+
+var path = d3.geo.path()
+    .projection(projection)
+    .pointRadius(1.5);
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width)
+    .attr("height", height);
+
+queue()
+    .defer(d3.json, "us.json")
+    .defer(d3.json, "players.tsv")
+    .await(ready);
+
+function ready(error, us, players) {
+  svg.append("path")
+      .datum(topojson.feature(us, us.objects.land))
+      .attr("class", "land")
+      .attr("d", path);
+
+
+
+  svg.append("path")
+      .datum(topojson.mesh(us, us.objects.states, function(a, b) { return a !== b; }))
+      .attr("class", "states")
+      .attr("d", path);
+
+  var dots = multiPoint(players);
+
+svg.append("g")
+      .attr("class", "g-point g-players-point").selectAll("rect")
+      .data(dots.coordinates)
+      .enter()
+      .append("rect")
+      .on("mouseover", function(d) { console.log(d); });
+
+      svg.selectAll(".g-point rect")
+  .attr("transform", function(d) { return "translate(" + projection(d) + ")"; })
+  .attr("width", 3)
+  .attr("height", 3);
+
+
+
+  svg.append("path")
+      .datum(topojson.feature(airports, airports.objects.airports))
+      .attr("class", "points")
+      .attr("d", path);
+}
+
+function multiPoint(playerPoint) {
+
+  return {
+    type: "MultiPoint",
+    coordinates: playerPoint.map(function(d) {
+      return [+d.Longi, +d.Lati];
+    })
+  }
+}
+
+</script>
