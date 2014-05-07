@@ -1,39 +1,95 @@
-
-<!DOCTYPE html>
+<!Doctype html>
 <html>
 <head>
-<meta charset="utf-8">
-<script src="http://d3js.org/d3.v3.min.js"></script>
-<script src="http://d3js.org/queue.v1.min.js"></script>
-<script src="http://d3js.org/topojson.v1.min.js"></script>
-<style>
-
-</style>
-
-
 
 </head>
-<body>
-<script type="text/JavaScript">
 
+<style>
+
+path {
+  stroke-linejoin: round;
+}
+
+.graticule {
+  fill: none;
+  stroke: #777;
+  stroke-width: .5px;
+  stroke-opacity: .5
+}
+
+
+
+.land {
+  fill: #ddd;
+}
+
+.countries {
+  fill: gray;
+}
+
+.boundary {
+  fill: none;
+  stroke: #FFFFFF;
+  stroke-width: .5px;
+
+}
+
+.dots {
+  fill: white;
+  stroke: #FFF;
+  stroke-width: .5px;
+  stroke-opacity: .5
+}
+</style>
+
+<body>
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script src="queue-min.js"></script>
+<script src="topojson.v1.min.js"></script>
+
+
+
+
+
+
+<script>
 
 
 var w = 800;
 var h = 600;
 var svg = d3.select("body").append("svg")
-attr("width", w)
+.attr("width", w)
 .attr("height", h);
 
 queue()
-    .defer(d3.json, "canada.json")
-    .defer(d3.tsv, "players.tsv")
-    .await(ready);
+		.defer(d3.json, "world.json")
+		.defer(d3.tsv, "players.tsv")
+		.await(ready);
 
-svg.selectAll(“append”)
-.data(topojson.feature(us, us.objects.counties).features)
-.enter()
-.append(“path”)
-.attr(“d”, path);
+
+
+
+function ready (err, world, players) {
+	if (err) { throw "I didn't load data correctly"; };
+	console.log("players", players);
+
+
+	players.forEach(function(d) {
+		d.Lati = +d.Lati;
+		d.Longi = +d.Longi;
+// 		Lati: "51.045074"
+// Longi: "-114.059049"
+	})
+
+
+
+
+
+
+svg.append("path")
+    .datum(graticule)
+    .attr("class", "graticule")
+    .attr("d", path);
 
 var projection = d3.geo.azimuthalEqualArea()
 .rotate([100, -45])
@@ -41,10 +97,49 @@ var projection = d3.geo.azimuthalEqualArea()
 .scale(800)
 .translate([w/2, h/2])
 
+ svg.insert("path", ".graticule")
+      .datum(topojson.feature(canada, {type: "GeometryCollection", geometries: canada.objects.countries.geometries.filter(function(d) { return d.id in ids; })}))
+      .attr("class", "countries")
+      .attr("d", path);
+
+  svg.insert("path", ".graticule")
+      .datum(topojson.mesh(canada, canada.objects.countries, function(a, b) { return a !== b; }))
+      .attr("class", "boundary")
+      .attr("d", path);
+
+
+      var dots = multiPoint(players);
+
+  svg.append("g")
+      .attr("class", "g-point g-players-point").selectAll("rect")
+      .data(dots.coordinates)
+      .enter()
+      .append("rect")
+      .on("mouseover", function(d) { console.log(d); });
+
+        svg.selectAll(".g-point rect")
+  .attr("transform", function(d) { return "translate(" + projection(d) + ")"; })
+  .attr("width", 3)
+  .attr("height", 3);
 
 
 
 
+
+
+function multiPoint(playerPoint) {
+
+  return {
+    type: "MultiPoint",
+    coordinates: playerPoint.map(function(d) {
+      return [+d.Longi, +d.Lati];
+    })
+  }
+}
+
+
+
+d3.select(self.frameElement).style("height", height + "px");
 
 
 
